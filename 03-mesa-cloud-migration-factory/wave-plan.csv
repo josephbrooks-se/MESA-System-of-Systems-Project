@@ -1,0 +1,3 @@
+wave_id,workload_id,disposition,dependency_group,target_account,target_pattern,planned_window,entry_gate,cutover_authority,rollback_deadline,status
+W1,WL-SYN-001,replatform,GRP-SYN-A,prod-portal-synthetic,Container plus managed database,2027-Q1,Gate D,Example Authority,4 hours after traffic shift,planned
+W1,WL-SYN-002,replatform,GRP-SYN-A,prod-batch-synthetic,Workflow plus object storage,2027-Q1,Gate D,Example Authority,Before next scheduled production run,planned

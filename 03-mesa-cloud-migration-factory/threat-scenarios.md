@@ -1,0 +1,26 @@
+# Cloud Migration Threat Scenarios
+
+| ID | Threat scenario | Mission/system effect | Architecture treatment | Verification | Residual concern |
+|---|---|---|---|---|---|
+| TS-01 | Compromised federated administrator identity | Unauthorized production change across accounts | Strong authentication, device/session policy, time-bounded elevation, separation of duties, protected audit | Revoked-token and privilege-escalation tests | Authorized insider or identity-provider compromise |
+| TS-02 | Stolen workload credential | Unauthorized access to APIs or data | Short-lived workload identity, resource-scoped policy, rotation, anomaly detection | Credential replay and scope tests | Valid credential may be abused before detection |
+| TS-03 | Landing-zone guardrail disabled | Accounts drift from approved baseline | Independent audit, protected policy pipeline, drift detection, quarantine authority | Synthetic guardrail removal | Privileged collusion |
+| TS-04 | CI/CD pipeline or artifact tampering | Malicious code/configuration reaches cloud workloads | Protected source, reviewed automation, dependency/secret scanning, artifact provenance, deployment admission | Modify artifact after build | Trusted build system can still be compromised |
+| TS-05 | Public exposure caused by misconfiguration | Unauthorized disclosure or attack surface | Deny-by-default patterns, policy as code, configuration scanning, restricted ingress/egress | Attempt public storage/service exposure | Novel service settings may evade rules |
+| TS-06 | Hybrid network route/DNS manipulation | Traffic interception, outage, or wrong destination | Governed hub, route/DNS automation, certificates, path monitoring, change control | Inject invalid route and DNS response | Provider/control-plane dependencies |
+| TS-07 | API/event replay or duplicate processing | Incorrect migration state or repeated action | Idempotency, immutable IDs, timestamps, signature, replay window, reconciliation | Replay signed request/event | Long partitions complicate reconciliation |
+| TS-08 | Data altered during migration | False or incomplete target authority | Authenticated encryption, digests, lineage, counts, integrity and business reconciliation | Alter transfer object and target row | Source data may already be wrong |
+| TS-09 | Ransomware or destructive administrator | Workload/data loss and mission interruption | Least privilege, immutable/protected backups, account separation, recovery exercise, anomaly detection | Destructive recovery exercise in isolated scope | Recovery time and dependency availability |
+| TS-10 | Central logging/audit tampering or outage | Loss of accountability and delayed detection | Protected log archive, separation of duties, delivery monitoring, alternate buffering | Block or alter log delivery | In-memory/local evidence gaps |
+| TS-11 | Shared platform service compromise | Cross-workload exposure and widespread outage | Separate accounts, workload/resource policy, service interface controls, dependency maps, rapid revocation | Simulated shared-service identity compromise | High reuse increases consequence |
+| TS-12 | External supplier/service compromise | Malicious update, unavailable service, or data exposure | Supplier identity, contract boundaries, provenance, egress control, contingency, dependency monitoring | Revoke supplier identity and fail service | Limited supplier transparency |
+| TS-13 | Denial-of-wallet/resource exhaustion | Cost surge, throttling, or workload failure | Budgets, quotas, rate limits, anomaly alerts, autoscaling bounds, circuit breakers | Synthetic load and quota test | Cost and availability tradeoff |
+| TS-14 | Insider exports sensitive migration evidence | Unauthorized disclosure | Resource/purpose policy, least privilege, export approval, watermark/audit, DLP-like controls | Unauthorized export attempt | Authorized user misuse |
+| TS-15 | Cutover authority spoofed or automated improperly | Unsafe authority transfer or residual-risk acceptance | Human authority, strong identity, separation of duties, signed decision record, automation prohibition | Service identity attempts decision | Social engineering of legitimate authority |
+| TS-16 | Rollback data divergence | Loss, duplication, or conflicting authoritative records | Last responsible rollback point, reverse synchronization, queue reconciliation, explicit data-loss boundary | Rehearsed rollback with post-cutover writes | Some external actions may be irreversible |
+| TS-17 | Region or control-plane outage during cutover | Migration failure and mission interruption | Workload-tier recovery, alternate path, paused cutover, source retention, tested runbook | Simulated dependency/region outage | Simultaneous provider and source failure |
+| TS-18 | Cloud cost/usage records manipulated | Incorrect chargeback and architecture decisions | Authenticated import, reconciliation to provider source, separation of financial approval | Submit altered/duplicate records | Complex shared-cost allocation |
+
+## Analysis method
+
+For each scenario, identify threatened mission assets, preconditions, attack/failure path, consequence, affected trust boundary, preventive/detective/recovery controls, test evidence, limitations, residual risk, and accountable authority. Source severity alone does not determine mission priority.

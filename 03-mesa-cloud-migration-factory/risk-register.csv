@@ -1,0 +1,3 @@
+risk_id,description,cause,mission_consequence,likelihood,impact,owner,mitigation,trigger,contingency,residual_risk,status
+R-SYN-001,Hidden dependency causes cutover failure,Incomplete interface inventory,Mission support interruption,medium,high,Architecture Owner,Observe network and application behavior; validate dependency map,Unrecognized traffic or failed rehearsal,Delay cutover and restore source authority,moderate,open
+R-SYN-002,Data divergence during coexistence,Uncoordinated writes or replication lag,Incorrect mission/business decisions,low,high,Data Owner,Define authority; monitor lag; reconcile counts and business totals,Reconciliation threshold exceeded,Freeze writes and execute rollback procedure,low,open

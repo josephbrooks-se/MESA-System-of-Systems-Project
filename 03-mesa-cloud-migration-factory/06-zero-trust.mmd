@@ -1,0 +1,8 @@
+flowchart TB
+  Subject["User or workload identity"] --> PEP["Policy enforcement point"]
+  Signals["Device, workload, purpose, environment, risk"] --> PDP["Policy decision point"]
+  Resource["Resource attributes and data policy"] --> PDP
+  PEP --> PDP
+  PDP -->|"allow, deny, or constrain"| PEP
+  PEP --> Target["Application, API, data, or platform resource"]
+  PEP --> Audit["Protected audit and monitoring"]

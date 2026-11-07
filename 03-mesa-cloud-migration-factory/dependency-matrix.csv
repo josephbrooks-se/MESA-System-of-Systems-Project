@@ -1,0 +1,3 @@
+dependency_id,source_workload,target_service,dependency_type,interface,frequency,latency_requirement,data_authority,failure_behavior,owner,validated,planned_treatment
+DEP-SYN-001,WL-SYN-001,Enterprise Identity,identity,OIDC-like interactive,per-session,2 seconds,Enterprise Identity Provider,New sessions denied; approved active sessions follow policy,Identity Owner,yes,Federate through cloud identity service
+DEP-SYN-002,WL-SYN-002,External File Source,data,Signed file transfer,daily,4 hours,External Source,Queue and alert; do not process incomplete file,Integration Owner,no,Build governed transfer and reconciliation

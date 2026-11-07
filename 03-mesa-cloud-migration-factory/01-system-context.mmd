@@ -1,0 +1,6 @@
+flowchart TB
+  Users["Users, operators, partners, administrators"] --> Cloud["MESA Cloud Environment"]
+  Legacy["Legacy hosting and data centers"] <-->|"migration and hybrid services"| Cloud
+  External["External providers and partner systems"] <-->|"governed interfaces"| Cloud
+  IdP["Enterprise identity and governance"] --> Cloud
+  Cloud --> ITSM["IT service, portfolio, finance, and authorization systems"]

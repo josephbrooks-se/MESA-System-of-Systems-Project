@@ -1,0 +1,15 @@
+flowchart TB
+  Org["Cloud Organization and Management"]
+  Sec["Security OU: Audit, Security Tooling, Log Archive"]
+  Infra["Infrastructure OU: Network, DNS, Ingress/Egress"]
+  Shared["Shared Services OU: Identity, CI/CD, Observability, Backup"]
+  Work["Workload OUs: Nonproduction and Production"]
+  Org --> Sec
+  Org --> Infra
+  Org --> Shared
+  Org --> Work
+  Sec -. "controls and monitoring" .-> Infra
+  Sec -. "controls and monitoring" .-> Shared
+  Sec -. "controls and monitoring" .-> Work
+  Infra -. "governed connectivity" .-> Shared
+  Infra -. "governed connectivity" .-> Work

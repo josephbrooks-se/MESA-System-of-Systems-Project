@@ -1,0 +1,12 @@
+flowchart TB
+  Discover["Discover and map dependencies"] --> Assess["Assess and select 7R disposition"]
+  Assess --> Design["Design target and migration wave"]
+  Design --> Build["Build through approved automation"]
+  Build --> Rehearse["Migrate, test, and rehearse rollback"]
+  Rehearse --> Decide{"Cutover ready?"}
+  Decide -->|"No"| Design
+  Decide -->|"Yes"| Cutover["Cut over and validate"]
+  Cutover --> Stable{"Stabilization accepted?"}
+  Stable -->|"No"| Rollback["Rollback or remediate"]
+  Rollback --> Rehearse
+  Stable -->|"Yes"| Exit["Decommission legacy and optimize"]

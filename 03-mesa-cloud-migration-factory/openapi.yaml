@@ -1,0 +1,1263 @@
+openapi: 3.1.0
+info:
+  title: MESA Cloud Migration Factory Integration API
+  version: 1.0.0
+  summary: Public-safe reference contract for external system communication
+  description: |
+    A synthetic, vendor-neutral API for portfolio discovery, workload assessment,
+    dependency mapping, cloud account requests, migration waves, readiness evidence,
+    cutover decisions, work items, cost records, and event subscriptions.
+    This contract contains no production endpoints, credentials, account IDs, or data.
+  contact:
+    name: Project MESA Architecture
+  license:
+    name: MIT
+servers:
+  - url: https://api.example.invalid/mesa-cloud/v1
+    description: Non-routable documentation endpoint
+tags:
+  - name: Health
+  - name: Portfolio Discovery
+  - name: Assessments
+  - name: Dependencies
+  - name: Accounts
+  - name: Migration Waves
+  - name: Readiness and Evidence
+  - name: Cutover Decisions
+  - name: Work Management
+  - name: FinOps
+  - name: Events
+security:
+  - oauth2: []
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Report service health without exposing protected dependencies
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service is available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Service is unavailable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /imports/cmdb:
+    post:
+      tags: [Portfolio Discovery]
+      summary: Import a governed batch of workload and asset metadata
+      operationId: importCmdbRecords
+      security:
+        - oauth2: [portfolio.import]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CmdbImportRequest'
+      responses:
+        '202':
+          description: Import accepted for validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportReceipt'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /workloads:
+    get:
+      tags: [Portfolio Discovery]
+      summary: Search workloads visible to the caller
+      operationId: listWorkloads
+      security:
+        - oauth2: [portfolio.read]
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/WorkloadStatus'
+        - name: criticality
+          in: query
+          schema:
+            $ref: '#/components/schemas/Criticality'
+        - name: owner
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+      responses:
+        '200':
+          description: Authorized workload page
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Workload' }
+                  nextPageToken: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Portfolio Discovery]
+      summary: Register a workload
+      operationId: createWorkload
+      security:
+        - oauth2: [portfolio.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkloadCreate'
+      responses:
+        '201':
+          description: Workload registered
+          headers:
+            Location:
+              schema: { type: string, format: uri-reference }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workload' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /workloads/{workloadId}:
+    parameters:
+      - $ref: '#/components/parameters/WorkloadId'
+      - $ref: '#/components/parameters/CorrelationId'
+    get:
+      tags: [Portfolio Discovery]
+      summary: Retrieve a workload
+      operationId: getWorkload
+      security:
+        - oauth2: [portfolio.read]
+      responses:
+        '200':
+          description: Authorized workload
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workload' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Portfolio Discovery]
+      summary: Update approved workload fields
+      operationId: updateWorkload
+      security:
+        - oauth2: [portfolio.write]
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/WorkloadPatch'
+      responses:
+        '200':
+          description: Workload updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workload' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /workloads/{workloadId}/dependencies:
+    parameters:
+      - $ref: '#/components/parameters/WorkloadId'
+      - $ref: '#/components/parameters/CorrelationId'
+    get:
+      tags: [Dependencies]
+      summary: List workload dependencies
+      operationId: listDependencies
+      security:
+        - oauth2: [dependencies.read]
+      responses:
+        '200':
+          description: Dependency list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Dependency' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Dependencies]
+      summary: Register a dependency
+      operationId: createDependency
+      security:
+        - oauth2: [dependencies.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DependencyCreate' }
+      responses:
+        '201':
+          description: Dependency registered
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dependency' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /assessments:
+    post:
+      tags: [Assessments]
+      summary: Submit a workload migration assessment and proposed disposition
+      operationId: createAssessment
+      security:
+        - oauth2: [assessments.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MigrationAssessmentCreate' }
+      responses:
+        '201':
+          description: Assessment created in proposed state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MigrationAssessment' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /assessments/{assessmentId}/decisions:
+    post:
+      tags: [Assessments]
+      summary: Record the accountable human disposition decision
+      operationId: decideAssessment
+      security:
+        - oauth2: [assessments.decide]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DispositionDecision' }
+      responses:
+        '201':
+          description: Decision recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DecisionReceipt' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /account-requests:
+    post:
+      tags: [Accounts]
+      summary: Request a governed cloud account or environment
+      operationId: createAccountRequest
+      security:
+        - oauth2: [accounts.request]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccountRequestCreate' }
+      responses:
+        '202':
+          description: Account request accepted for policy and approval workflow
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountRequest' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /account-requests/{requestId}:
+    get:
+      tags: [Accounts]
+      summary: Retrieve account-request status and conformance evidence
+      operationId: getAccountRequest
+      security:
+        - oauth2: [accounts.read]
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Account request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /migration-waves:
+    get:
+      tags: [Migration Waves]
+      summary: List migration waves
+      operationId: listMigrationWaves
+      security:
+        - oauth2: [waves.read]
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Migration-wave page
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/MigrationWave' }
+                  nextPageToken: { type: string }
+    post:
+      tags: [Migration Waves]
+      summary: Create a proposed migration wave
+      operationId: createMigrationWave
+      security:
+        - oauth2: [waves.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MigrationWaveCreate' }
+      responses:
+        '201':
+          description: Migration wave created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MigrationWave' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /migration-waves/{waveId}/readiness:
+    parameters:
+      - $ref: '#/components/parameters/WaveId'
+      - $ref: '#/components/parameters/CorrelationId'
+    get:
+      tags: [Migration Waves]
+      summary: Retrieve current stage-gate readiness
+      operationId: getWaveReadiness
+      security:
+        - oauth2: [waves.read]
+      responses:
+        '200':
+          description: Current readiness evaluation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessEvaluation' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Migration Waves]
+      summary: Submit a stage-gate readiness evaluation
+      operationId: createWaveReadiness
+      security:
+        - oauth2: [waves.review]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReadinessEvaluationCreate' }
+      responses:
+        '201':
+          description: Readiness evaluation recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessEvaluation' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /evidence:
+    post:
+      tags: [Readiness and Evidence]
+      summary: Register evidence metadata or an approved external reference
+      operationId: registerEvidence
+      security:
+        - oauth2: [evidence.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EvidenceCreate' }
+      responses:
+        '202':
+          description: Evidence accepted for validation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Evidence' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /evidence/{evidenceId}:
+    get:
+      tags: [Readiness and Evidence]
+      summary: Retrieve authorized evidence metadata
+      operationId: getEvidence
+      security:
+        - oauth2: [evidence.read]
+      parameters:
+        - $ref: '#/components/parameters/EvidenceId'
+        - $ref: '#/components/parameters/AccessPurpose'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Evidence metadata
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Evidence' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /cutovers:
+    post:
+      tags: [Cutover Decisions]
+      summary: Create a cutover decision package
+      operationId: createCutover
+      security:
+        - oauth2: [cutovers.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CutoverCreate' }
+      responses:
+        '201':
+          description: Cutover package created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cutover' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /cutovers/{cutoverId}/decisions:
+    post:
+      tags: [Cutover Decisions]
+      summary: Record a human cutover, observation, delay, cancel, or rollback decision
+      operationId: decideCutover
+      security:
+        - oauth2: [cutovers.decide]
+      parameters:
+        - $ref: '#/components/parameters/CutoverId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CutoverDecision' }
+      responses:
+        '201':
+          description: Decision recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DecisionReceipt' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /work-items:
+    post:
+      tags: [Work Management]
+      summary: Create or synchronize a migration, risk, finding, or decommission work item
+      operationId: createWorkItem
+      security:
+        - oauth2: [work.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WorkItemCreate' }
+      responses:
+        '201':
+          description: Work item created or linked
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WorkItem' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /cost-records:
+    post:
+      tags: [FinOps]
+      summary: Import governed workload cost and usage allocation records
+      operationId: importCostRecords
+      security:
+        - oauth2: [cost.import]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [periodStart, periodEnd, records]
+              properties:
+                periodStart: { type: string, format: date }
+                periodEnd: { type: string, format: date }
+                records:
+                  type: array
+                  minItems: 1
+                  maxItems: 1000
+                  items: { $ref: '#/components/schemas/CostRecord' }
+      responses:
+        '202':
+          description: Cost records accepted for validation and allocation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportReceipt' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /event-subscriptions:
+    post:
+      tags: [Events]
+      summary: Register a callback subscription for approved migration events
+      operationId: createEventSubscription
+      security:
+        - oauth2: [events.subscribe]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventSubscriptionCreate' }
+      callbacks:
+        migrationEvent:
+          '{$request.body#/callbackUrl}':
+            post:
+              summary: Deliver a signed migration event
+              parameters:
+                - name: X-MESA-Event-Id
+                  in: header
+                  required: true
+                  schema: { type: string, format: uuid }
+                - name: X-MESA-Signature
+                  in: header
+                  required: true
+                  schema: { type: string }
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema: { $ref: '#/components/schemas/MigrationEvent' }
+              responses:
+                '204': { description: Event accepted }
+                '409': { description: Duplicate event already processed }
+                '429': { description: Consumer requests retry with backoff }
+      responses:
+        '201':
+          description: Subscription registered
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventSubscription' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: Federated OAuth 2.0 client-credentials or delegated authorization with short-lived tokens
+      flows:
+        authorizationCode:
+          authorizationUrl: https://identity.example.invalid/oauth2/authorize
+          tokenUrl: https://identity.example.invalid/oauth2/token
+          scopes:
+            portfolio.read: Read authorized workload portfolio metadata
+            portfolio.write: Register and update workload portfolio metadata
+            portfolio.import: Import governed CMDB metadata
+            dependencies.read: Read authorized dependency information
+            dependencies.write: Register and update dependencies
+            assessments.write: Submit proposed migration assessments
+            assessments.decide: Record accountable human disposition decisions
+            accounts.request: Request governed cloud accounts
+            accounts.read: Read authorized account-request status
+            waves.read: Read migration waves and readiness
+            waves.write: Create and update migration waves
+            waves.review: Record readiness evaluations
+            evidence.read: Read authorized evidence metadata
+            evidence.write: Register evidence metadata
+            cutovers.write: Create cutover packages
+            cutovers.decide: Record accountable human cutover decisions
+            work.write: Create or synchronize work items
+            cost.import: Import governed cost records
+            events.subscribe: Register event callbacks
+        clientCredentials:
+          tokenUrl: https://identity.example.invalid/oauth2/token
+          scopes:
+            portfolio.import: Import governed CMDB metadata
+            evidence.write: Register evidence metadata
+            work.write: Create or synchronize work items
+            cost.import: Import governed cost records
+
+  parameters:
+    WorkloadId:
+      name: workloadId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^WL-SYN-[0-9]{3,}$' }
+    AssessmentId:
+      name: assessmentId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^ASM-SYN-[0-9]{3,}$' }
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^AR-SYN-[0-9]{3,}$' }
+    WaveId:
+      name: waveId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^W[0-9]+$' }
+    EvidenceId:
+      name: evidenceId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^EV-SYN-[0-9]{3,}$' }
+    CutoverId:
+      name: cutoverId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^CUT-SYN-[0-9]{3,}$' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 16, maxLength: 128 }
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+    AccessPurpose:
+      name: X-Access-Purpose
+      in: header
+      required: true
+      schema: { type: string, minLength: 3, maxLength: 120 }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema: { type: string }
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    PageToken:
+      name: pageToken
+      in: query
+      required: false
+      schema: { type: string, maxLength: 512 }
+
+  responses:
+    BadRequest:
+      description: Request syntax or structure is invalid
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: Authentication is missing or invalid
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Resource policy denied the requested action
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Resource does not exist or is not visible to the caller
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Duplicate, version, state, or identifier conflict
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    PreconditionFailed:
+      description: Resource version does not match If-Match
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unprocessable:
+      description: Request is syntactically valid but violates business or architecture rules
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    RateLimited:
+      description: Rate limit exceeded; retry after the response delay
+      headers:
+        Retry-After:
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    HealthStatus:
+      type: object
+      additionalProperties: false
+      required: [status, checkedAt]
+      properties:
+        status: { enum: [available, degraded, unavailable] }
+        checkedAt: { type: string, format: date-time }
+
+    Problem:
+      type: object
+      additionalProperties: true
+      required: [type, title, status, correlationId]
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        detail: { type: string }
+        instance: { type: string, format: uri-reference }
+        correlationId: { type: string, format: uuid }
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: { type: string }
+              message: { type: string }
+
+    Criticality:
+      type: string
+      enum: [Tier 1, Tier 2, Tier 3, Tier 4]
+
+    WorkloadStatus:
+      type: string
+      enum: [discovered, assessed, approved, building, rehearsing, cutover, stabilizing, completed, retained, retired]
+
+    Disposition:
+      type: string
+      enum: [retire, retain, rehost, relocate, repurchase, replatform, refactor]
+
+    OwnerSet:
+      type: object
+      additionalProperties: false
+      required: [mission, product, technical, data, security]
+      properties:
+        mission: { type: string, minLength: 3, maxLength: 120 }
+        product: { type: string, minLength: 3, maxLength: 120 }
+        technical: { type: string, minLength: 3, maxLength: 120 }
+        data: { type: string, minLength: 3, maxLength: 120 }
+        security: { type: string, minLength: 3, maxLength: 120 }
+        financial: { type: string, maxLength: 120 }
+
+    WorkloadCreate:
+      type: object
+      additionalProperties: false
+      required: [workloadId, name, missionCapability, criticality, owners, environments, source]
+      properties:
+        workloadId: { type: string, pattern: '^WL-SYN-[0-9]{3,}$' }
+        name: { type: string, minLength: 3, maxLength: 160 }
+        missionCapability: { type: string, minLength: 10, maxLength: 500 }
+        criticality: { $ref: '#/components/schemas/Criticality' }
+        owners: { $ref: '#/components/schemas/OwnerSet' }
+        environments:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { enum: [development, test, staging, production, disaster-recovery] }
+        technologySummary: { type: string, maxLength: 1000 }
+        dataClassification: { type: string, maxLength: 120 }
+        rtoHours: { type: number, minimum: 0 }
+        rpoHours: { type: number, minimum: 0 }
+        source: { type: string, minLength: 3, maxLength: 160 }
+        collectedAt: { type: string, format: date-time }
+
+    WorkloadPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        missionCapability: { type: string, minLength: 10, maxLength: 500 }
+        criticality: { $ref: '#/components/schemas/Criticality' }
+        owners: { $ref: '#/components/schemas/OwnerSet' }
+        technologySummary: { type: string, maxLength: 1000 }
+        dataClassification: { type: string, maxLength: 120 }
+        rtoHours: { type: number, minimum: 0 }
+        rpoHours: { type: number, minimum: 0 }
+        status: { $ref: '#/components/schemas/WorkloadStatus' }
+
+    Workload:
+      allOf:
+        - $ref: '#/components/schemas/WorkloadCreate'
+        - type: object
+          required: [status, version, createdAt, updatedAt]
+          properties:
+            status: { $ref: '#/components/schemas/WorkloadStatus' }
+            disposition: { $ref: '#/components/schemas/Disposition' }
+            targetPattern: { type: string }
+            waveId: { type: string }
+            version: { type: integer, minimum: 1 }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+
+    DependencyCreate:
+      type: object
+      additionalProperties: false
+      required: [dependencyId, targetId, dependencyType, owner, validated, failureBehavior]
+      properties:
+        dependencyId: { type: string, pattern: '^DEP-SYN-[0-9]{3,}$' }
+        targetId: { type: string, minLength: 3, maxLength: 160 }
+        dependencyType: { enum: [identity, network, data, api, event, file, database, schedule, licensing, human, shared-service, external-partner] }
+        interfaceReference: { type: string }
+        owner: { type: string, minLength: 3, maxLength: 120 }
+        validated: { type: boolean }
+        failureBehavior: { type: string, minLength: 10, maxLength: 1000 }
+        latencyRequirement: { type: string, maxLength: 120 }
+        dataAuthority: { type: string, maxLength: 160 }
+
+    Dependency:
+      allOf:
+        - $ref: '#/components/schemas/DependencyCreate'
+        - type: object
+          required: [sourceWorkloadId, createdAt]
+          properties:
+            sourceWorkloadId: { type: string }
+            createdAt: { type: string, format: date-time }
+
+    ScoreSet:
+      type: object
+      additionalProperties: false
+      required: [missionValue, cloudFit, technicalHealth, dependencyComplexity, dataComplexity, securityReadiness, operationsReadiness, financialValue, changeCapacity]
+      properties:
+        missionValue: { type: integer, minimum: 1, maximum: 5 }
+        cloudFit: { type: integer, minimum: 1, maximum: 5 }
+        technicalHealth: { type: integer, minimum: 1, maximum: 5 }
+        dependencyComplexity: { type: integer, minimum: 1, maximum: 5 }
+        dataComplexity: { type: integer, minimum: 1, maximum: 5 }
+        securityReadiness: { type: integer, minimum: 1, maximum: 5 }
+        operationsReadiness: { type: integer, minimum: 1, maximum: 5 }
+        financialValue: { type: integer, minimum: 1, maximum: 5 }
+        changeCapacity: { type: integer, minimum: 1, maximum: 5 }
+
+    MigrationAssessmentCreate:
+      type: object
+      additionalProperties: false
+      required: [workloadId, scores, proposedDisposition, targetPattern, rationale, alternatives]
+      properties:
+        workloadId: { type: string, pattern: '^WL-SYN-[0-9]{3,}$' }
+        scores: { $ref: '#/components/schemas/ScoreSet' }
+        proposedDisposition: { $ref: '#/components/schemas/Disposition' }
+        targetPattern: { type: string, minLength: 10, maxLength: 500 }
+        rationale: { type: string, minLength: 20, maxLength: 2000 }
+        alternatives:
+          type: array
+          minItems: 1
+          items: { type: string, maxLength: 500 }
+        riskReferences:
+          type: array
+          items: { type: string }
+        evidenceReferences:
+          type: array
+          items: { type: string }
+
+    MigrationAssessment:
+      allOf:
+        - $ref: '#/components/schemas/MigrationAssessmentCreate'
+        - type: object
+          required: [assessmentId, status, createdAt]
+          properties:
+            assessmentId: { type: string, pattern: '^ASM-SYN-[0-9]{3,}$' }
+            status: { enum: [proposed, approved, rejected, superseded] }
+            createdAt: { type: string, format: date-time }
+
+    DispositionDecision:
+      type: object
+      additionalProperties: false
+      required: [decision, authority, rationale, effectiveAt]
+      properties:
+        decision: { enum: [approve, reject, return-for-rework] }
+        approvedDisposition: { $ref: '#/components/schemas/Disposition' }
+        authority: { type: string, minLength: 3, maxLength: 120 }
+        rationale: { type: string, minLength: 20, maxLength: 2000 }
+        conditions:
+          type: array
+          items: { type: string, maxLength: 500 }
+        effectiveAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+
+    AccountRequestCreate:
+      type: object
+      additionalProperties: false
+      required: [requestId, workloadId, environment, organizationalUnit, regionClass, owners, dataClassification, networkProfile, budget]
+      properties:
+        requestId: { type: string, pattern: '^AR-SYN-[0-9]{3,}$' }
+        workloadId: { type: string, pattern: '^WL-SYN-[0-9]{3,}$' }
+        environment: { enum: [development, test, staging, production, disaster-recovery, sandbox] }
+        organizationalUnit: { enum: [security, infrastructure, shared-services, nonproduction, production, sandbox, suspended] }
+        regionClass: { type: string, maxLength: 80 }
+        owners: { $ref: '#/components/schemas/OwnerSet' }
+        dataClassification: { type: string, minLength: 3, maxLength: 120 }
+        networkProfile: { type: string, minLength: 3, maxLength: 120 }
+        budget:
+          type: object
+          required: [currency, monthlyAmount]
+          properties:
+            currency: { type: string, pattern: '^[A-Z]{3}$' }
+            monthlyAmount: { type: number, minimum: 0 }
+        expirationDate: { type: string, format: date }
+
+    AccountRequest:
+      allOf:
+        - $ref: '#/components/schemas/AccountRequestCreate'
+        - type: object
+          required: [status, submittedAt]
+          properties:
+            status: { enum: [submitted, validating, awaiting-approval, provisioning, verifying, completed, rejected, failed, suspended] }
+            submittedAt: { type: string, format: date-time }
+            completedAt: { type: string, format: date-time }
+            accountReference: { type: string, description: Synthetic external reference; never expose real account numbers publicly }
+            evidenceReferences:
+              type: array
+              items: { type: string }
+            limitations:
+              type: array
+              items: { type: string }
+
+    MigrationWaveCreate:
+      type: object
+      additionalProperties: false
+      required: [waveId, name, workloadIds, plannedStart, plannedEnd, migrationLead, cutoverAuthority]
+      properties:
+        waveId: { type: string, pattern: '^W[0-9]+$' }
+        name: { type: string, minLength: 3, maxLength: 160 }
+        workloadIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, pattern: '^WL-SYN-[0-9]{3,}$' }
+        dependencyGroup: { type: string, maxLength: 120 }
+        plannedStart: { type: string, format: date }
+        plannedEnd: { type: string, format: date }
+        migrationLead: { type: string, minLength: 3, maxLength: 120 }
+        cutoverAuthority: { type: string, minLength: 3, maxLength: 120 }
+        riskReferences:
+          type: array
+          items: { type: string }
+
+    MigrationWave:
+      allOf:
+        - $ref: '#/components/schemas/MigrationWaveCreate'
+        - type: object
+          required: [status, createdAt]
+          properties:
+            status: { enum: [proposed, approved, building, rehearsing, ready, cutting-over, stabilizing, completed, paused, cancelled] }
+            createdAt: { type: string, format: date-time }
+            currentGate: { type: string }
+
+    ReadinessCriterion:
+      type: object
+      additionalProperties: false
+      required: [criterionId, name, result, owner]
+      properties:
+        criterionId: { type: string }
+        name: { type: string }
+        result: { enum: [pass, fail, limited, not-tested, not-applicable] }
+        owner: { type: string }
+        evidenceReferences:
+          type: array
+          items: { type: string }
+        limitation: { type: string }
+
+    ReadinessEvaluationCreate:
+      type: object
+      additionalProperties: false
+      required: [gate, overallResult, criteria, reviewer, reviewedAt]
+      properties:
+        gate: { enum: [mission-fit, foundation, workload-design, cutover, stabilization, legacy-exit] }
+        overallResult: { enum: [ready, conditionally-ready, not-ready] }
+        criteria:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ReadinessCriterion' }
+        reviewer: { type: string, minLength: 3, maxLength: 120 }
+        reviewedAt: { type: string, format: date-time }
+        conditions:
+          type: array
+          items: { type: string }
+
+    ReadinessEvaluation:
+      allOf:
+        - $ref: '#/components/schemas/ReadinessEvaluationCreate'
+        - type: object
+          required: [evaluationId, waveId]
+          properties:
+            evaluationId: { type: string }
+            waveId: { type: string }
+
+    EvidenceCreate:
+      type: object
+      additionalProperties: false
+      required: [evidenceId, evidenceType, subjectId, claimReferences, source, collectedAt, validUntil, digest, markings]
+      properties:
+        evidenceId: { type: string, pattern: '^EV-SYN-[0-9]{3,}$' }
+        evidenceType: { enum: [test-result, configuration, architecture-record, review-record, recovery-exercise, cost-record, migration-log, data-reconciliation] }
+        subjectId: { type: string, minLength: 3, maxLength: 160 }
+        claimReferences:
+          type: array
+          minItems: 1
+          items: { type: string }
+        source: { type: string, minLength: 3, maxLength: 160 }
+        sourceReference: { type: string, format: uri-reference }
+        configurationId: { type: string, maxLength: 160 }
+        collectedAt: { type: string, format: date-time }
+        validUntil: { type: string, format: date-time }
+        digest: { type: string, pattern: '^sha256:[a-f0-9]{64}$' }
+        markings:
+          type: array
+          minItems: 1
+          items: { type: string }
+        limitations:
+          type: array
+          items: { type: string }
+
+    Evidence:
+      allOf:
+        - $ref: '#/components/schemas/EvidenceCreate'
+        - type: object
+          required: [reviewState]
+          properties:
+            reviewState: { enum: [pending, accepted, limited, rejected, expired, superseded] }
+            reviewer: { type: string }
+            reviewedAt: { type: string, format: date-time }
+
+    CutoverCreate:
+      type: object
+      additionalProperties: false
+      required: [cutoverId, waveId, workloadIds, plannedStart, rollbackDeadline, decisionAuthority, evidenceReferences, rollbackPlanReference]
+      properties:
+        cutoverId: { type: string, pattern: '^CUT-SYN-[0-9]{3,}$' }
+        waveId: { type: string, pattern: '^W[0-9]+$' }
+        workloadIds:
+          type: array
+          minItems: 1
+          items: { type: string }
+        plannedStart: { type: string, format: date-time }
+        rollbackDeadline: { type: string, format: date-time }
+        decisionAuthority: { type: string, minLength: 3, maxLength: 120 }
+        evidenceReferences:
+          type: array
+          minItems: 1
+          items: { type: string }
+        rollbackPlanReference: { type: string }
+        communicationPlanReference: { type: string }
+
+    Cutover:
+      allOf:
+        - $ref: '#/components/schemas/CutoverCreate'
+        - type: object
+          required: [status, createdAt]
+          properties:
+            status: { enum: [proposed, ready, approved, executing, observing, accepted, rollback-declared, rolled-back, delayed, cancelled] }
+            createdAt: { type: string, format: date-time }
+
+    CutoverDecision:
+      type: object
+      additionalProperties: false
+      required: [decision, authority, rationale, decidedAt]
+      properties:
+        decision: { enum: [proceed, observe, delay, cancel, accept, rollback, close-rollback-window] }
+        authority: { type: string, minLength: 3, maxLength: 120 }
+        rationale: { type: string, minLength: 20, maxLength: 2000 }
+        evidenceReferences:
+          type: array
+          items: { type: string }
+        conditions:
+          type: array
+          items: { type: string }
+        decidedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+
+    DecisionReceipt:
+      type: object
+      additionalProperties: false
+      required: [decisionId, status, recordedAt, correlationId]
+      properties:
+        decisionId: { type: string }
+        status: { enum: [recorded, pending-independent-review] }
+        recordedAt: { type: string, format: date-time }
+        correlationId: { type: string, format: uuid }
+
+    WorkItemCreate:
+      type: object
+      additionalProperties: false
+      required: [externalSystem, externalId, workType, subjectId, title, priority, owner, status]
+      properties:
+        externalSystem: { type: string, minLength: 3, maxLength: 120 }
+        externalId: { type: string, minLength: 1, maxLength: 160 }
+        workType: { enum: [migration-task, risk, finding, defect, exception, decommission-task] }
+        subjectId: { type: string, minLength: 3, maxLength: 160 }
+        title: { type: string, minLength: 3, maxLength: 200 }
+        description: { type: string, maxLength: 4000 }
+        priority: { enum: [critical, high, moderate, low] }
+        owner: { type: string, minLength: 3, maxLength: 120 }
+        status: { enum: [open, in-progress, blocked, resolved, closed, accepted-time-bounded] }
+        targetDate: { type: string, format: date }
+        traceReferences:
+          type: array
+          items: { type: string }
+
+    WorkItem:
+      allOf:
+        - $ref: '#/components/schemas/WorkItemCreate'
+        - type: object
+          required: [workItemId, createdAt, updatedAt]
+          properties:
+            workItemId: { type: string }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+
+    CostRecord:
+      type: object
+      additionalProperties: false
+      required: [recordId, workloadId, environment, owner, capability, currency, amount]
+      properties:
+        recordId: { type: string }
+        workloadId: { type: string, pattern: '^WL-SYN-[0-9]{3,}$' }
+        environment: { type: string }
+        owner: { type: string }
+        capability: { type: string }
+        serviceCategory: { type: string }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        amount: { type: number, minimum: 0 }
+        usageQuantity: { type: number, minimum: 0 }
+        usageUnit: { type: string }
+        allocationConfidence: { enum: [direct, rule-based, estimated, unallocated] }
+
+    CmdbImportRequest:
+      type: object
+      additionalProperties: false
+      required: [source, exportedAt, records, digest]
+      properties:
+        source: { type: string, minLength: 3, maxLength: 160 }
+        exportedAt: { type: string, format: date-time }
+        records:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items: { $ref: '#/components/schemas/WorkloadCreate' }
+        digest: { type: string, pattern: '^sha256:[a-f0-9]{64}$' }
+
+    ImportReceipt:
+      type: object
+      additionalProperties: false
+      required: [importId, status, acceptedAt, correlationId]
+      properties:
+        importId: { type: string }
+        status: { enum: [accepted, validating, partially-accepted, rejected] }
+        acceptedAt: { type: string, format: date-time }
+        acceptedRecords: { type: integer, minimum: 0 }
+        rejectedRecords: { type: integer, minimum: 0 }
+        correlationId: { type: string, format: uuid }
+
+    EventSubscriptionCreate:
+      type: object
+      additionalProperties: false
+      required: [subscriberId, callbackUrl, eventTypes, secretReference, expiresAt]
+      properties:
+        subscriberId: { type: string, minLength: 3, maxLength: 120 }
+        callbackUrl: { type: string, format: uri }
+        eventTypes:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            enum: [workload.changed.v1, assessment.decided.v1, account.status.v1, wave.readiness.v1, evidence.status.v1, cutover.decision.v1, risk.changed.v1]
+        secretReference: { type: string, description: Reference to a managed secret; never submit the secret value }
+        expiresAt: { type: string, format: date-time }
+
+    EventSubscription:
+      allOf:
+        - $ref: '#/components/schemas/EventSubscriptionCreate'
+        - type: object
+          required: [subscriptionId, status, createdAt]
+          properties:
+            subscriptionId: { type: string }
+            status: { enum: [active, suspended, expired, revoked] }
+            createdAt: { type: string, format: date-time }
+
+    MigrationEvent:
+      type: object
+      additionalProperties: false
+      required: [eventId, eventType, occurredAt, publishedAt, producer, subjectId, correlationId, schemaVersion, payloadDigest, data]
+      properties:
+        eventId: { type: string, format: uuid }
+        eventType: { type: string }
+        occurredAt: { type: string, format: date-time }
+        publishedAt: { type: string, format: date-time }
+        producer: { type: string }
+        subjectId: { type: string }
+        correlationId: { type: string, format: uuid }
+        sequence: { type: integer, minimum: 0 }
+        schemaVersion: { type: string, pattern: '^[0-9]+\.[0-9]+$' }
+        payloadDigest: { type: string, pattern: '^sha256:[a-f0-9]{64}$' }
+        markings:
+          type: array
+          items: { type: string }
+        data:
+          type: object
+          additionalProperties: true

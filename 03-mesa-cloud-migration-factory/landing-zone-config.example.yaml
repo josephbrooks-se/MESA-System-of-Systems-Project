@@ -1,0 +1,35 @@
+metadata:
+  name: mesa-cloud-synthetic
+  purpose: public architecture example
+  deployable: false
+organization:
+  organizational_units:
+    - security
+    - infrastructure
+    - shared-services
+    - nonproduction
+    - production
+    - sandbox
+    - suspended
+baseline:
+  identity:
+    federation_required: true
+    local_users_denied_by_default: true
+    privileged_access_time_bounded: true
+  audit:
+    central_log_archive: true
+    configuration_history: true
+    protected_retention: organization_defined
+  network:
+    centralized_routing: true
+    explicit_workload_attachment: true
+    internet_egress_governed: true
+  security:
+    encryption_by_default: true
+    approved_regions_only: true
+    threat_detection: true
+    drift_detection: true
+  financial:
+    ownership_tags_required: true
+    budgets_required: true
+    sandbox_expiration_required: true

@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant S as Source System
+  participant M as Migration Service
+  participant T as Target Data Service
+  participant V as Verification Service
+  participant A as Cutover Authority
+  S->>M: Baseline export or replication stream
+  M->>T: Encrypted load with provenance
+  V->>S: Capture source counts, digests, and business totals
+  V->>T: Compare target counts, integrity, and semantics
+  alt reconciled
+    V->>A: Evidence and limitations
+    A->>S: Approve final synchronization/freeze
+    M->>T: Final delta
+    V->>A: Final reconciliation
+  else not reconciled
+    V->>M: Correct and repeat
+  end

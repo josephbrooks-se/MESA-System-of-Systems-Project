@@ -1,0 +1,8 @@
+flowchart TB
+  Mission["Mission outcome and operational thread"] --> Req["Cloud architecture requirement"]
+  Req --> Pattern["Target pattern and ADR"]
+  Pattern --> Wave["Migration wave and backlog"]
+  Wave --> Test["Readiness, cutover, and recovery tests"]
+  Test --> Evidence["Evidence and limitations"]
+  Evidence --> Decision["Cutover and legacy-exit decisions"]
+  Decision -. "monitoring and change" .-> Mission

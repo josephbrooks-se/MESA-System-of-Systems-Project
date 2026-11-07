@@ -1,0 +1,13 @@
+flowchart TB
+  Sites["Legacy sites and data centers"]
+  Connect["Private connection plus encrypted backup path"]
+  Hub["Cloud network hub: routing, DNS, inspection, ingress/egress"]
+  Shared["Shared service networks"]
+  NonProd["Nonproduction workload networks"]
+  Prod["Production workload networks"]
+  Sites --> Connect
+  Connect --> Hub
+  Hub --> Shared
+  Hub --> NonProd
+  Hub --> Prod
+  NonProd -. "no implicit path" .- Prod

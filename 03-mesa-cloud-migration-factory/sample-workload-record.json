@@ -1,0 +1,17 @@
+{
+  "workloadId": "WL-SYN-001",
+  "name": "Synthetic Portal",
+  "criticality": "Tier 2",
+  "owners": {
+    "mission": "Example Mission Owner",
+    "product": "Example Product Owner",
+    "technical": "Example Technical Owner",
+    "data": "Example Data Owner",
+    "security": "Example Security Owner"
+  },
+  "disposition": "replatform",
+  "targetPattern": "Managed container runtime plus managed relational database",
+  "dependencies": ["DEP-SYN-001", "DEP-SYN-003"],
+  "waveId": "W1",
+  "status": "approved"
+}

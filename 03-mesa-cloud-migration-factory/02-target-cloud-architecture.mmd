@@ -1,0 +1,15 @@
+flowchart TB
+  Edge["DNS, CDN, WAF, load balancing, API edge"]
+  Apps["Workload accounts: VM, container, serverless, managed runtime"]
+  Integration["APIs, events, queues, workflows, transfer"]
+  Data["Object, relational, NoSQL, cache, search, catalog"]
+  Platform["Identity, CI/CD, observability, backup, keys, secrets"]
+  Security["Audit, logs, posture, detection, policy, incident response"]
+  Edge --> Apps
+  Apps --> Integration
+  Integration --> Data
+  Platform -. "shared products" .-> Apps
+  Platform -. "shared products" .-> Integration
+  Security -. "guardrails and telemetry" .-> Edge
+  Security -. "guardrails and telemetry" .-> Apps
+  Security -. "guardrails and telemetry" .-> Data

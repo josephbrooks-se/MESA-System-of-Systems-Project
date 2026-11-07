@@ -1,0 +1,12 @@
+verification_id,requirement_id,method,scenario,expected_result,evidence_type,owner,status
+VT-001,CLR-001,inspection,Review complete synthetic portfolio,Every system has approved owner disposition target and exit criteria,Portfolio query and decision record,Portfolio Architect,planned-synthetic
+VT-003,CLR-003,test,Attempt cross-environment access without explicit policy,Access denied and audited,Policy and audit result,Cloud Security,planned-synthetic
+VT-004,CLR-004,test,Expired privileged elevation attempts production change,Change denied and alerted,Identity policy and audit result,Identity Team,planned-synthetic
+VT-006,CLR-006,inspection,Sample production resources,At least 95 percent match approved automation; exceptions recorded,Drift and deployment report,Platform Engineering,planned-synthetic
+VT-007,CLR-007,test,Execute protected actions across accounts,Events arrive intact in protected log archive,Audit and delivery evidence,Security Operations,planned-synthetic
+VT-010,CLR-010,exercise,Simulate Tier 2 service loss,Recovery meets approved RTO/RPO and integrity criteria,Exercise report and restored configuration,Recovery Lead,planned-synthetic
+VT-011,CLR-011,demonstration,Conduct synthetic cutover rehearsal,Authority receives complete evidence and decision points,Rehearsal record,Migration Lead,planned-synthetic
+VT-013,CLR-013,test,Introduce approved synthetic drift,Drift detected routed and reconciled,Drift alert and corrective record,Platform Engineering,planned-synthetic
+VT-015,CLR-015,query,Review sample monthly cost,Cost attributable to workload environment owner and capability,Cost allocation report,FinOps,planned-synthetic
+VT-018,CLR-018,test,Run priority mission thread after cutover,Functional data security performance resilience and telemetry thresholds pass,End-to-end evidence package,Independent Reviewer,planned-synthetic
+VT-019,CLR-019,inspection,Review completed migration,Legacy infrastructure interfaces licenses and records are closed or excepted,Decommission evidence,Governance Lead,planned-synthetic

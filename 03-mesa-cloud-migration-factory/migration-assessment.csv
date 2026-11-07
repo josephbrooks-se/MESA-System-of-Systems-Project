@@ -1,0 +1,3 @@
+workload_id,mission_value,cloud_fit,technical_health,dependency_complexity,data_complexity,security_readiness,operations_readiness,financial_value,change_capacity,recommended_7r,target_pattern,rationale,decision_authority,status
+WL-SYN-001,5,4,2,3,3,3,3,4,3,replatform,Managed container runtime plus managed relational database,Removes unsupported middleware while preserving application behavior,Example Authority,proposed
+WL-SYN-002,3,5,2,2,3,3,2,4,4,replatform,Managed workflow and object storage,Replace fragile scheduling and file handling without full application rewrite,Example Authority,proposed

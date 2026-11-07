@@ -1,0 +1,3 @@
+trace_id,mission_outcome,operational_thread,requirement_id,architecture_element,adr_id,wave_id,story_id,verification_id,evidence_id,decision_id,status
+TR-SYN-001,MO-01,OT-02,CLR-018,Mission Thread Verification,ADR-005,W1,US-014,VT-018,EV-SYN-018,CD-04,planned
+TR-SYN-002,MO-01,OT-03,CLR-010,Recovery Orchestration,ADR-001,W1,US-019,VT-010,EV-SYN-010,CD-04,planned
