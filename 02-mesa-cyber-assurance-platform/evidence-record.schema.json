@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/mesa-cap/evidence-record.schema.json",
+  "title": "Synthetic Evidence Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["evidenceId", "sourceId", "evidenceType", "assetId", "collectedAt", "validUntil", "producer", "digest", "markings", "claimRefs"],
+  "properties": {
+    "evidenceId": {"type": "string", "pattern": "^EV-SYN-[0-9]{3,}$"},
+    "sourceId": {"type": "string", "minLength": 3},
+    "evidenceType": {"enum": ["test_result", "configuration", "scan_result", "review_record", "supplier_attestation", "architecture_record"]},
+    "assetId": {"type": "string", "pattern": "^AST-SYN-[0-9]{3,}$"},
+    "configurationId": {"type": "string"},
+    "collectedAt": {"type": "string", "format": "date-time"},
+    "validUntil": {"type": "string", "format": "date-time"},
+    "producer": {"type": "string", "minLength": 3},
+    "transferPath": {"type": "array", "items": {"type": "string"}},
+    "digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "markings": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "claimRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "reviewState": {"enum": ["pending", "accepted", "limited", "rejected", "expired", "superseded"]},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}

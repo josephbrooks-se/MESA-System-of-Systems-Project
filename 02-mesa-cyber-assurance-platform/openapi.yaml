@@ -1,0 +1,93 @@
+openapi: 3.1.0
+info:
+  title: MESA-CAP Reference API
+  version: 1.0.0
+  description: Notional public-safe interface contract. Authentication and authorization details are illustrative.
+servers:
+  - url: https://example.invalid/mesa-cap/v1
+paths:
+  /evidence:
+    post:
+      summary: Register evidence metadata
+      operationId: registerEvidence
+      security:
+        - oauth2: [evidence.write]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string, minLength: 16 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/evidence-record.schema.json
+      responses:
+        '202': { description: Accepted for validation }
+        '400': { description: Invalid contract }
+        '401': { description: Authentication failed }
+        '403': { description: Authorization denied }
+        '409': { description: Identifier conflict }
+  /evidence/{evidenceId}:
+    get:
+      summary: Retrieve authorized evidence metadata
+      operationId: getEvidence
+      security:
+        - oauth2: [evidence.read]
+      parameters:
+        - in: path
+          name: evidenceId
+          required: true
+          schema: { type: string, pattern: '^EV-SYN-[0-9]{3,}$' }
+        - in: header
+          name: X-Access-Purpose
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Authorized evidence metadata
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/evidence-record.schema.json
+        '403': { description: Policy denied }
+        '404': { description: Not found or not visible }
+  /risks/{riskId}/decisions:
+    post:
+      summary: Record a human-approved risk decision
+      operationId: recordRiskDecision
+      security:
+        - oauth2: [risk.decide]
+      parameters:
+        - in: path
+          name: riskId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision, authority, rationale, expiresAt]
+              properties:
+                decision: { type: string, enum: [mitigate, transfer, avoid, accept_time_bounded] }
+                authority: { type: string }
+                rationale: { type: string, minLength: 20 }
+                expiresAt: { type: string, format: date-time }
+                assumptions: { type: array, items: { type: string } }
+      responses:
+        '201': { description: Decision recorded }
+        '403': { description: Separation-of-duties or authority check failed }
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://identity.example.invalid/oauth2/token
+          scopes:
+            evidence.write: Register evidence metadata
+            evidence.read: Read authorized evidence metadata
+            risk.decide: Record an approved human risk decision

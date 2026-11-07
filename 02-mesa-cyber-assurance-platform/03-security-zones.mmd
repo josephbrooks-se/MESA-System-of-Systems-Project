@@ -1,0 +1,12 @@
+flowchart TB
+  User["Managed User and Device Zone"]
+  Access["Access and Policy Enforcement Zone"]
+  App["Application Services Zone"]
+  Evidence["Restricted Evidence Zone"]
+  Integration["Integration and Quarantine Zone"]
+  Enclave["Isolated Mission/Test Enclave"]
+  User -->|"authenticated request"| Access
+  Access -->|"authorized action"| App
+  App -->|"resource-scoped access"| Evidence
+  Integration -->|"validated records"| App
+  Enclave -->|"controlled export"| Integration

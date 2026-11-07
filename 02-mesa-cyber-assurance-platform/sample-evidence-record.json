@@ -1,0 +1,16 @@
+{
+  "evidenceId": "EV-SYN-014",
+  "sourceId": "TEST-RUN-SYN-2048",
+  "evidenceType": "test_result",
+  "assetId": "AST-SYN-042",
+  "configurationId": "CFG-SYN-7.3",
+  "collectedAt": "2026-10-15T14:20:00Z",
+  "validUntil": "2027-01-15T14:20:00Z",
+  "producer": "workload:test-orchestrator-synthetic",
+  "transferPath": ["isolated-collector-synthetic", "validation-gateway-synthetic"],
+  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "markings": ["PUBLIC-SYNTHETIC"],
+  "claimRefs": ["CYR-014", "VT-014"],
+  "reviewState": "accepted",
+  "limitations": ["Synthetic example; no operational system was tested."]
+}

@@ -1,0 +1,11 @@
+flowchart TB
+  Stakeholders["Architecture, engineering, assessment, program, and authorization stakeholders"]
+  CAP["MESA Cyber Assurance Platform"]
+  Enterprise["Enterprise, cloud, MBSE, A&A, test, and security tools"]
+  Enclaves["Isolated embedded and laboratory enclaves"]
+  Suppliers["Supplier evidence exchange"]
+  Stakeholders -->|"Review, decide, govern"| CAP
+  Enterprise <-->|"APIs, events, governed exports"| CAP
+  Enclaves -->|"Approved store-and-forward"| CAP
+  Suppliers -->|"Contracted evidence packages"| CAP
+  CAP -->|"Approved status and work items"| Enterprise

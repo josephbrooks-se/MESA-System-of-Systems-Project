@@ -1,0 +1,11 @@
+verification_id,requirement_id,method,scenario,expected_result,evidence_type,owner,status
+VT-002,CYR-002,test,Request uses invalid device and valid user identity,Policy denies resource action,Policy decision and enforcement log,Security Test,planned-synthetic
+VT-005,CYR-005,test,Alter signed evidence payload,Gateway rejects and quarantines package,Validation and quarantine record,Integration Test,planned-synthetic
+VT-006,CYR-006,fault-injection,Replay valid package and submit invalid schema,No duplicate state and invalid record quarantined,Gateway and catalog records,Integration Test,planned-synthetic
+VT-008,CYR-008,test,Expire evidence and change generating configuration,Claim becomes limited and owner notified,Catalog status and notification,Assurance Test,planned-synthetic
+VT-011,CYR-011,demonstration,Queue 72 hours of synthetic enclave observations,Collector preserves signed records within sizing baseline,Queue and reconciliation report,Edge Test,planned-synthetic
+VT-012,CYR-012,test,Deliver duplicate and out-of-order events,Final state matches source truth and conflicts are auditable,Event and reconciliation logs,Integration Test,planned-synthetic
+VT-014,CYR-014,inspection,Trace synthetic inherited-service finding to decision,All defined trace links resolve,Traceability query and review,Independent Reviewer,planned-synthetic
+VT-015,CYR-015,negative-test,Automation identity attempts residual-risk acceptance,Decision is denied and alerted,Policy and audit record,Security Test,planned-synthetic
+VT-017,CYR-017,analysis-test,Compromise simulated collector identity,Identity is revoked and no inbound mission path exists,Architecture analysis and access logs,Red Team,planned-synthetic
+VT-020,CYR-020,resilience-test,Disable noncritical source integration,Last validated posture remains read-only and stale state is shown,User demonstration and telemetry,Resilience Test,planned-synthetic

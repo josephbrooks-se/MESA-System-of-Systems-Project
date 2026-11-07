@@ -1,0 +1,2 @@
+item_id,weakness_or_gap,mission_impact,affected_assets,source,planned_mitigation,milestones,resources,owner,target_date,current_status,residual_risk,decision_authority,evidence_required,revisit_trigger
+POAM-SYN-001,Synthetic example gap,Potential delay to assurance decision,AST-SYN-042,VT-SYN-001,Implement and verify corrective action,Design-Test-Review,Example team,Example owner,2027-01-31,open,moderate,Example authority,EV-SYN-099,Target date missed or mission impact changes

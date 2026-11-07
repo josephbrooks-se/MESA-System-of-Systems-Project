@@ -1,0 +1,15 @@
+flowchart TB
+  UX["Experience Layer"]
+  Domain["Architecture, Threat/Risk, Control, Evidence, Test, Decision Services"]
+  Integration["API Gateway, Event Broker, Schema Registry, Adapters"]
+  Data["Graph, Transaction, Evidence, Catalog, Audit Stores"]
+  Edge["Segregated Enclave Collectors"]
+  Sec["ICAM, Policy, Workload Identity, Keys, Telemetry"]
+  UX --> Domain
+  Domain --> Integration
+  Domain --> Data
+  Edge --> Integration
+  Sec -. "protects and observes" .-> UX
+  Sec -. "protects and observes" .-> Domain
+  Sec -. "protects and observes" .-> Integration
+  Sec -. "protects and observes" .-> Data

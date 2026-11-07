@@ -1,0 +1,7 @@
+flowchart TB
+  Mission["Mission Outcome and Loss Scenario"] --> Req["Security Requirement"]
+  Req --> Arch["Function, Component, Interface, and Control"]
+  Arch --> Test["Test Case and Acceptance Criteria"]
+  Test --> Evidence["Evidence, Finding, and Confidence"]
+  Evidence --> Decision["Residual-Risk Decision"]
+  Decision -. "monitoring change reopens" .-> Mission

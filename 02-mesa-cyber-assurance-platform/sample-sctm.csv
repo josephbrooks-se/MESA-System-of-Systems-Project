@@ -1,0 +1,6 @@
+trace_id,requirement_id,control_reference,implementation_allocation,verification_id,evidence_id,owner,status,limitations
+TR-SYN-001,CYR-002,AC-family,Policy Plane,VT-002,EV-SYN-002,Security Architecture,synthetic-pass,Synthetic policy set only
+TR-SYN-002,CYR-005,SI-family,Ingestion Gateway,VT-005,EV-SYN-005,Integration Engineering,synthetic-pass,Uses example signing identity
+TR-SYN-003,CYR-010,CA-family,Control and Workflow Services,VT-014,EV-SYN-014,Authorization Architecture,synthetic-pass,Three sample consumer boundaries
+TR-SYN-004,CYR-011,CP-family,Enclave Collector,VT-011,EV-SYN-011,Edge Engineering,synthetic-limited,72-hour load modeled not field-tested
+TR-SYN-005,CYR-015,AC-family,Decision Service,VT-015,EV-SYN-015,Product Security,synthetic-pass,Human authority is simulated

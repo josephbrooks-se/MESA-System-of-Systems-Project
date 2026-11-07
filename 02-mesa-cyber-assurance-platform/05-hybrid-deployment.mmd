@@ -1,0 +1,12 @@
+flowchart TB
+  Cloud["Approved Cloud or Enterprise Hosting"]
+  Core["MESA-CAP Core Services"]
+  Gateway["Integration and Transfer Gateway"]
+  Site["On-Premises Engineering and Test Site"]
+  Collector["Segregated Collector"]
+  Embedded["Embedded or OT Environment"]
+  Cloud --> Core
+  Site <-->|"governed API or event"| Gateway
+  Core <-->|"approved connection"| Gateway
+  Embedded -->|"local observation only"| Collector
+  Collector -->|"approved store-and-forward"| Gateway

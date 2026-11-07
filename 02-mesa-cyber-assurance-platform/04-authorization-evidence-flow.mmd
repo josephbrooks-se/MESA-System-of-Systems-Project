@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant S as Evidence Source
+  participant G as Ingestion Gateway
+  participant C as Evidence Catalog
+  participant R as Risk and Control Service
+  participant H as Human Decision Authority
+  S->>G: Signed evidence package or event
+  G->>G: Authenticate, validate, mark, check replay
+  alt valid
+    G->>C: Register evidence and provenance
+    C->>R: Evidence accepted or superseded
+    R->>R: Recalculate coverage, confidence, and risk
+    R->>H: Present impacts, gaps, and alternatives
+    H->>R: Record decision and revisit conditions
+  else invalid
+    G->>C: Quarantine metadata and reason
+    C-->>S: Corrective action request
+  end
