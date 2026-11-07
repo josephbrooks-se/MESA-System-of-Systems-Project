@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/e4524805-1809-49e6-858f-c33a04eebc33"
+       alt="Project Mesa precision typography logo-1"
+       width="300">
+     
 # 01 — Mission Context and CONOPS
 
 ## Mission problem
