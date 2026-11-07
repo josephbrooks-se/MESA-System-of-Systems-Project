@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/174d4eb1-8cc9-4bfb-86c1-a3614e2d44b6"
+       alt="MESA Cloud Migration Factory Emblem"
+       width="300">
+</p>
+
 # 01 — Mission and CONOPS
 
 ## Mission need
