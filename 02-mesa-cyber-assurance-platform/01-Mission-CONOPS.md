@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/576ff97d-bdaf-4c1d-ae01-fe97ea7e2b24"
+       alt="Monumental mesa cyber assurance emblem"
+       width="300">
+
+     
 # 01 — Mission Need and CONOPS
 
 ## Problem statement
