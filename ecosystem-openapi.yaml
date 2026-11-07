@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  title: Project MESA Ecosystem Coordination API
+  version: 1.0.0
+  description: Synthetic top-level API for cross-system status, traceability, impact, and decision coordination.
+servers:
+  - url: https://api.example.invalid/mesa-ecosystem/v1
+security:
+  - oauth2: []
+paths:
+  /constituent-systems:
+    get:
+      summary: List constituent systems and authoritative domains
+      operationId: listConstituentSystems
+      security:
+        - oauth2: [ecosystem.read]
+      responses:
+        '200':
+          description: Constituent system registry
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConstituentSystem' }
+  /ecosystem-status:
+    get:
+      summary: Retrieve synthesized ecosystem status with source timestamps
+      operationId: getEcosystemStatus
+      security:
+        - oauth2: [ecosystem.read]
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Current synthesized status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EcosystemStatus' }
+  /trace/query:
+    post:
+      summary: Query cross-system trace relationships
+      operationId: queryEcosystemTrace
+      security:
+        - oauth2: [trace.read]
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [startIds]
+              properties:
+                startIds: { type: array, minItems: 1, items: { type: string } }
+                relationshipTypes: { type: array, items: { type: string } }
+                maximumDepth: { type: integer, minimum: 1, maximum: 12, default: 8 }
+      responses:
+        '200':
+          description: Authorized cross-system trace graph
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TraceGraph' }
+  /impact-analysis:
+    post:
+      summary: Request cross-system change-impact analysis
+      operationId: analyzeImpact
+      security:
+        - oauth2: [impact.analyze]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ImpactRequest' }
+      responses:
+        '202':
+          description: Impact analysis accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImpactReceipt' }
+        '409': { description: Duplicate or state conflict }
+        '422': { description: Change lacks sufficient authoritative references }
+  /decisions:
+    post:
+      summary: Register an approved human cross-system decision reference
+      operationId: registerDecision
+      security:
+        - oauth2: [decisions.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecisionCreate' }
+      responses:
+        '201':
+          description: Decision reference recorded and routed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Decision' }
+        '403': { description: Identity lacks required decision authority }
+        '409': { description: Decision or version conflict }
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://identity.example.invalid/oauth2/authorize
+          tokenUrl: https://identity.example.invalid/oauth2/token
+          scopes:
+            ecosystem.read: Read authorized ecosystem status
+            trace.read: Query cross-system trace relationships
+            impact.analyze: Request cross-system impact analysis
+            decisions.write: Register approved human decision references
+  parameters:
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 16, maxLength: 128 }
+  schemas:
+    ConstituentSystem:
+      type: object
+      required: [systemId, name, owner, authoritativeDomains, apiReference, status]
+      properties:
+        systemId: { type: string }
+        name: { type: string }
+        owner: { type: string }
+        authoritativeDomains: { type: array, items: { type: string } }
+        apiReference: { type: string, format: uri-reference }
+        eventTypes: { type: array, items: { type: string } }
+        status: { enum: [available, degraded, unavailable, maintenance] }
+        observedAt: { type: string, format: date-time }
+    SourceStatus:
+      type: object
+      required: [systemId, status, observedAt, dataFreshness]
+      properties:
+        systemId: { type: string }
+        status: { enum: [available, degraded, unavailable, maintenance] }
+        observedAt: { type: string, format: date-time }
+        dataFreshness: { enum: [current, aging, stale, unknown] }
+        limitations: { type: array, items: { type: string } }
+    EcosystemStatus:
+      type: object
+      required: [overallStatus, sources, generatedAt]
+      properties:
+        overallStatus: { enum: [operational, degraded, decision-limited, unavailable] }
+        sources: { type: array, minItems: 3, items: { $ref: '#/components/schemas/SourceStatus' } }
+        openDecisionCount: { type: integer, minimum: 0 }
+        criticalRiskCount: { type: integer, minimum: 0 }
+        generatedAt: { type: string, format: date-time }
+    TraceGraph:
+      type: object
+      required: [nodes, relationships, sourceVersions]
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            required: [id, type, authority]
+            properties:
+              id: { type: string }
+              type: { type: string }
+              authority: { type: string }
+              version: { type: string }
+        relationships:
+          type: array
+          items:
+            type: object
+            required: [sourceId, targetId, relationshipType]
+            properties:
+              sourceId: { type: string }
+              targetId: { type: string }
+              relationshipType: { type: string }
+        sourceVersions:
+          type: object
+          additionalProperties: { type: string }
+    ImpactRequest:
+      type: object
+      additionalProperties: false
+      required: [changeId, changedEntityIds, changeSummary, requestedBy]
+      properties:
+        changeId: { type: string }
+        changedEntityIds: { type: array, minItems: 1, items: { type: string } }
+        changeSummary: { type: string, minLength: 20 }
+        effectiveDate: { type: string, format: date-time }
+        requestedBy: { type: string }
+    ImpactReceipt:
+      type: object
+      required: [analysisId, status, acceptedAt]
+      properties:
+        analysisId: { type: string }
+        status: { enum: [accepted, analyzing, awaiting-source, completed, failed] }
+        acceptedAt: { type: string, format: date-time }
+    DecisionCreate:
+      type: object
+      additionalProperties: false
+      required: [decisionId, decisionType, authority, rationale, affectedEntityIds, sourceSystem, sourceDecisionReference, decidedAt]
+      properties:
+        decisionId: { type: string }
+        decisionType: { enum: [architecture-baseline, risk-treatment, authorization, migration-wave, cutover, rollback, legacy-exit, exception] }
+        authority: { type: string }
+        rationale: { type: string, minLength: 20 }
+        affectedEntityIds: { type: array, minItems: 1, items: { type: string } }
+        sourceSystem: { type: string }
+        sourceDecisionReference: { type: string }
+        evidenceReferences: { type: array, items: { type: string } }
+        conditions: { type: array, items: { type: string } }
+        decidedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+    Decision:
+      allOf:
+        - $ref: '#/components/schemas/DecisionCreate'
+        - type: object
+          required: [recordedAt, status]
+          properties:
+            recordedAt: { type: string, format: date-time }
+            status: { enum: [active, expired, superseded, revoked] }

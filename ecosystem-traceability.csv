@@ -1,0 +1,4 @@
+trace_id,mission_outcome,operational_thread,architecture_requirement,architecture_system,architecture_interface,cyber_control,cloud_capability,test,evidence,risk,decision,monitoring_trigger,status
+TR-ECO-001,MO-001,OT-001,REQ-001,SYS-SYN-001,IF-001,CA-SYN-001,Cloud landing zone,VT-ECO-001,EV-SYN-001,R-SOS-001,DEC-001,Baseline or configuration change,planned
+TR-ECO-002,MO-001,OT-001,CLR-018,SYS-SYN-002,IF-005,Assurance readiness gate,Migration Wave W1,VT-018,EV-SYN-018,R-007,CD-04,Test evidence invalidated,planned
+TR-ECO-003,MO-001,OT-002,CYR-014,SYS-SYN-001,IF-006,Evidence catalog,Traceability service,VT-014,EV-SYN-014,R-004,DEC-005,Evidence expired or revoked,planned

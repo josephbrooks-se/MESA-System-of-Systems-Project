@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/mesa-ecosystem/event.schema.json",
+  "title": "MESA Ecosystem Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId", "eventType", "occurredAt", "publishedAt", "producer", "subjectId", "correlationId", "schemaVersion", "payloadDigest", "data"],
+  "properties": {
+    "eventId": {"type": "string", "format": "uuid"},
+    "eventType": {"type": "string", "pattern": "^mesa\\.(architecture|cyber|cloud)\\.[a-z0-9-]+\\.v[0-9]+$"},
+    "occurredAt": {"type": "string", "format": "date-time"},
+    "publishedAt": {"type": "string", "format": "date-time"},
+    "producer": {"enum": ["MESA-SoS-Architecture", "MESA-Cyber-Assurance", "MESA-Cloud-Migration"]},
+    "subjectId": {"type": "string", "minLength": 3},
+    "correlationId": {"type": "string", "format": "uuid"},
+    "sequence": {"type": "integer", "minimum": 0},
+    "sourceVersion": {"type": "string"},
+    "schemaVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"},
+    "markings": {"type": "array", "items": {"type": "string"}},
+    "payloadDigest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "data": {"type": "object", "additionalProperties": true}
+  }
+}
