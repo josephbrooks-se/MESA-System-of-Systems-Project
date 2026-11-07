@@ -1,0 +1,9 @@
+flowchart TB
+  Mission["Mission owners, users, operators, decision authorities"] --> SOS["MESA SoS Architecture"]
+  SOS <--> CAP["MESA Cyber Assurance Platform"]
+  SOS <--> CMF["MESA Cloud Migration Factory"]
+  CAP <--> CMF
+  External["External authoritative systems and partners"] <--> SOS
+  Shared["Identity, policy, integration, evidence, audit"] -. supports .-> SOS
+  Shared -. supports .-> CAP
+  Shared -. supports .-> CMF

@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant M as Mission Authority
+  participant S as SoS Architecture
+  participant C as Cyber Assurance
+  participant F as Cloud Migration
+  M->>S: Approve mission outcome and measures
+  S->>S: Baseline thread, requirements, systems, interfaces
+  S->>F: Target architecture and migration constraints
+  F->>S: Workload inventory, dependencies, wave proposal
+  S->>C: Architecture baseline and evidence claims
+  C->>F: Controls, readiness gates, evidence needs
+  F->>C: Configuration, test, and migration evidence
+  C->>M: Assurance posture and residual limitations
+  M->>F: Cutover decision
+  F->>S: Migration, stabilization, and legacy-exit status

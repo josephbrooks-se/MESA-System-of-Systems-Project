@@ -1,0 +1,4 @@
+trace_id,mission_outcome,operational_thread,requirement,function,system,interface,control_or_cloud_allocation,test,evidence,risk,decision,status
+TR-SOS-001,MO-001,OT-001,REQ-001,LF-06,SYS-SYN-001,IF-004,CA-SYN-001,VT-SOS-001,EV-SYN-001,R-001,DEC-001,planned
+TR-SOS-002,MO-001,OT-001,CLR-018,LF-09,SYS-SYN-002,IF-005,Cloud Migration Wave W1,VT-018,EV-SYN-018,R-007,DEC-004,planned
+TR-SOS-003,MO-001,OT-002,CYR-014,LF-08,SYS-SYN-001,IF-006,Evidence Catalog,VT-014,EV-SYN-014,R-004,DEC-005,planned

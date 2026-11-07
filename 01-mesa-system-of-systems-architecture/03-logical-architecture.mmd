@@ -1,0 +1,16 @@
+flowchart TB
+  Experience["Architecture workspaces and decision views"]
+  Domain["Mission, behavior, requirements, logical architecture, interface, trace services"]
+  Integration["API gateway, event broker, schema and contract registry"]
+  Data["Architecture graph, records, evidence references, audit"]
+  Cyber["Cyber Assurance APIs and events"]
+  Cloud["Cloud Migration APIs and events"]
+  Policy["Federated identity and zero-trust policy"]
+  Experience --> Domain
+  Domain --> Integration
+  Domain --> Data
+  Cyber <--> Integration
+  Cloud <--> Integration
+  Policy -. protects .-> Experience
+  Policy -. protects .-> Domain
+  Policy -. protects .-> Integration

@@ -1,0 +1,289 @@
+openapi: 3.1.0
+info:
+  title: MESA System-of-Systems Architecture API
+  version: 1.0.0
+  description: Synthetic public-safe contract for architecture baselines, systems, interfaces, traceability, and decisions.
+servers:
+  - url: https://api.example.invalid/mesa-sos/v1
+security:
+  - oauth2: []
+paths:
+  /architecture-baselines:
+    post:
+      summary: Propose an architecture baseline
+      operationId: createArchitectureBaseline
+      security:
+        - oauth2: [architecture.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArchitectureBaselineCreate' }
+      responses:
+        '201':
+          description: Baseline proposal created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArchitectureBaseline' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+  /architecture-baselines/{baselineId}:
+    get:
+      summary: Retrieve an authorized architecture baseline
+      operationId: getArchitectureBaseline
+      security:
+        - oauth2: [architecture.read]
+      parameters:
+        - $ref: '#/components/parameters/BaselineId'
+      responses:
+        '200':
+          description: Architecture baseline
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArchitectureBaseline' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /systems:
+    get:
+      summary: List constituent systems
+      operationId: listSystems
+      security:
+        - oauth2: [architecture.read]
+      responses:
+        '200':
+          description: Constituent systems
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/SystemRecord' }
+    post:
+      summary: Register a constituent system
+      operationId: createSystem
+      security:
+        - oauth2: [architecture.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SystemRecordCreate' }
+      responses:
+        '201':
+          description: Constituent system registered
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SystemRecord' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /interfaces:
+    post:
+      summary: Register a governed interface
+      operationId: createInterface
+      security:
+        - oauth2: [interfaces.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InterfaceRecordCreate' }
+      responses:
+        '201':
+          description: Interface registered
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InterfaceRecord' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+  /trace/query:
+    post:
+      summary: Query end-to-end trace relationships
+      operationId: queryTrace
+      security:
+        - oauth2: [trace.read]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [startIds]
+              properties:
+                startIds:
+                  type: array
+                  minItems: 1
+                  items: { type: string }
+                relationshipTypes:
+                  type: array
+                  items: { type: string }
+                maximumDepth: { type: integer, minimum: 1, maximum: 12, default: 6 }
+      responses:
+        '200':
+          description: Authorized trace graph
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TraceGraph' }
+  /architecture-baselines/{baselineId}/decisions:
+    post:
+      summary: Record a human architecture-baseline decision
+      operationId: decideArchitectureBaseline
+      security:
+        - oauth2: [architecture.decide]
+      parameters:
+        - $ref: '#/components/parameters/BaselineId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BaselineDecision' }
+      responses:
+        '201':
+          description: Decision recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DecisionReceipt' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://identity.example.invalid/oauth2/authorize
+          tokenUrl: https://identity.example.invalid/oauth2/token
+          scopes:
+            architecture.read: Read authorized architecture state
+            architecture.write: Propose and update architecture state
+            architecture.decide: Record approved human architecture decisions
+            interfaces.write: Register and update governed interfaces
+            trace.read: Query authorized trace relationships
+  parameters:
+    BaselineId:
+      name: baselineId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^ABL-SYN-[0-9]{3,}$' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 16, maxLength: 128 }
+  responses:
+    NotFound:
+      description: Resource not found or not visible
+    Conflict:
+      description: Version, state, identifier, or duplicate conflict
+    Forbidden:
+      description: Policy or authority denied the action
+    Unprocessable:
+      description: Request violates architecture or business rules
+  schemas:
+    ArchitectureBaselineCreate:
+      type: object
+      additionalProperties: false
+      required: [baselineId, missionOutcomeRefs, operationalThreadRefs, requirementRefs, systemRefs, interfaceRefs, version, rationale]
+      properties:
+        baselineId: { type: string, pattern: '^ABL-SYN-[0-9]{3,}$' }
+        missionOutcomeRefs: { type: array, minItems: 1, items: { type: string } }
+        operationalThreadRefs: { type: array, minItems: 1, items: { type: string } }
+        requirementRefs: { type: array, minItems: 1, items: { type: string } }
+        systemRefs: { type: array, minItems: 1, items: { type: string } }
+        interfaceRefs: { type: array, items: { type: string } }
+        version: { type: string, pattern: '^[0-9]+\.[0-9]+\.[0-9]+$' }
+        rationale: { type: string, minLength: 20 }
+        evidenceRefs: { type: array, items: { type: string } }
+    ArchitectureBaseline:
+      allOf:
+        - $ref: '#/components/schemas/ArchitectureBaselineCreate'
+        - type: object
+          required: [status, createdAt]
+          properties:
+            status: { enum: [proposed, approved, rejected, superseded] }
+            createdAt: { type: string, format: date-time }
+            approvedAt: { type: string, format: date-time }
+    SystemRecordCreate:
+      type: object
+      additionalProperties: false
+      required: [systemId, name, owner, missionOutcomeRefs, authoritativeDomains]
+      properties:
+        systemId: { type: string, pattern: '^SYS-SYN-[0-9]{3,}$' }
+        name: { type: string, minLength: 3 }
+        owner: { type: string, minLength: 3 }
+        missionOutcomeRefs: { type: array, minItems: 1, items: { type: string } }
+        authoritativeDomains: { type: array, minItems: 1, items: { type: string } }
+    SystemRecord:
+      allOf:
+        - $ref: '#/components/schemas/SystemRecordCreate'
+        - type: object
+          required: [status, createdAt]
+          properties:
+            status: { enum: [proposed, baselined, operational, degraded, retiring, retired] }
+            createdAt: { type: string, format: date-time }
+    InterfaceRecordCreate:
+      type: object
+      additionalProperties: false
+      required: [interfaceId, name, producerSystemId, consumerSystemIds, pattern, authority, owner, contractVersion]
+      properties:
+        interfaceId: { type: string, pattern: '^IF-[0-9]{3,}$' }
+        name: { type: string, minLength: 3 }
+        producerSystemId: { type: string }
+        consumerSystemIds: { type: array, minItems: 1, items: { type: string } }
+        pattern: { enum: [rest-api, event, governed-file, query] }
+        authority: { type: string }
+        owner: { type: string }
+        contractVersion: { type: string }
+    InterfaceRecord:
+      allOf:
+        - $ref: '#/components/schemas/InterfaceRecordCreate'
+        - type: object
+          required: [status, createdAt]
+          properties:
+            status: { enum: [proposed, active, deprecated, retired] }
+            createdAt: { type: string, format: date-time }
+    TraceGraph:
+      type: object
+      required: [nodes, relationships]
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            required: [id, type, authority]
+            properties:
+              id: { type: string }
+              type: { type: string }
+              authority: { type: string }
+        relationships:
+          type: array
+          items:
+            type: object
+            required: [sourceId, targetId, relationshipType]
+            properties:
+              sourceId: { type: string }
+              targetId: { type: string }
+              relationshipType: { type: string }
+    BaselineDecision:
+      type: object
+      additionalProperties: false
+      required: [decision, authority, rationale, decidedAt]
+      properties:
+        decision: { enum: [approve, reject, return-for-rework, supersede] }
+        authority: { type: string }
+        rationale: { type: string, minLength: 20 }
+        conditions: { type: array, items: { type: string } }
+        decidedAt: { type: string, format: date-time }
+    DecisionReceipt:
+      type: object
+      required: [decisionId, recordedAt]
+      properties:
+        decisionId: { type: string }
+        recordedAt: { type: string, format: date-time }

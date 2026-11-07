@@ -1,0 +1,9 @@
+{
+  "systemId": "SYS-SYN-001",
+  "name": "MESA Cyber Assurance Platform",
+  "owner": "Synthetic Cyber Architecture Owner",
+  "missionOutcomeRefs": ["MO-001"],
+  "interfaces": ["IF-001", "IF-002", "IF-004", "IF-006", "IF-007"],
+  "authoritativeDomains": ["threats", "control allocations", "evidence review state", "assurance findings"],
+  "status": "operational"
+}

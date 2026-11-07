@@ -1,0 +1,9 @@
+flowchart TB
+  MO["Mission outcome"] --> OT["Operational thread"]
+  OT --> REQ["Requirement"]
+  REQ --> ARCH["Function, system, interface"]
+  ARCH --> ALLOC["Cyber control and cloud capability"]
+  ALLOC --> TEST["Verification"]
+  TEST --> EV["Evidence and confidence"]
+  EV --> RISK["Risk and decision"]
+  RISK -. "monitoring change reopens" .-> MO

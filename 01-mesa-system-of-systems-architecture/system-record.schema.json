@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/mesa-sos/system-record.schema.json",
+  "title": "Synthetic Constituent System Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["systemId", "name", "owner", "missionOutcomeRefs", "interfaces", "status"],
+  "properties": {
+    "systemId": {"type": "string", "pattern": "^SYS-SYN-[0-9]{3,}$"},
+    "name": {"type": "string", "minLength": 3},
+    "owner": {"type": "string", "minLength": 3},
+    "missionOutcomeRefs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "interfaces": {"type": "array", "items": {"type": "string"}},
+    "authoritativeDomains": {"type": "array", "items": {"type": "string"}},
+    "status": {"enum": ["proposed", "baselined", "operational", "degraded", "retiring", "retired"]}
+  }
+}
